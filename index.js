@@ -19,6 +19,10 @@ const students = [
     {id:3, name:'Deif', code:'1600144'}
 ]
 
+app.get('/', function(req,res) {
+    res.send('Welcome to Lms made by Ahmad Abd ElHakim 1600122')
+});
+
 app.get('/web/courses/create', function(req,res) {
     res.sendFile(path.join(__dirname + '/courses.html'));
 });
