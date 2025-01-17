@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <title>Create Course</title>
+    <title>Student Management System</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -73,32 +73,6 @@
         p {
             line-height: 1.6;
         }
-        form {
-            margin-top: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        input[type="submit"] {
-            background: #333;
-            color: #fff;
-            border: 0;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        input[type="submit"]:hover {
-            background: #77aaff;
-        }
     </style>
 </head>
 <body>
@@ -109,8 +83,8 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="/">Home</a></li>
-                    <li class="current"><a href="/web/courses/create">Create Course</a></li>
+                    <li class="current"><a href="/">Home</a></li>
+                    <li><a href="/web/courses/create">Create Course</a></li>
                     <li><a href="/web/students/create">Create Student</a></li>
                     <li><a href="/api/courses">View Courses</a></li>
                     <li><a href="/api/students">View Students</a></li>
@@ -120,16 +94,8 @@
     </header>
     <div class="container">
         <div class="content">
-            <h2>Create Course</h2>
-            <form action="/api/courses" method="post">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name">
-                <label for="code">Code:</label>
-                <input type="text" id="code" name="code">
-                <label for="description">Description:</label>
-                <input type="text" id="description" name="description">
-                <input type="submit" value="Submit">
-            </form>
+            <h1>Welcome to LMS made by Ahmad Abd ElHakim</h1>
+            <p>This is a simple student management system where you can manage courses and students.</p>
         </div>
     </div>
     <footer>
