@@ -1,24 +1,23 @@
 // Import dependencies
-
-// Import Express lib for building the LMS web app
 const express = require('express');
-// For validating user input
 const Joi = require('joi');
-// For joining file paths
 const path = require('path');
-// For reading files
 const fs = require('fs');
-// Import the database connection
-const pool = require('./db');
-// For environment variables (listening port)
-require('dotenv').config(); 
+const pool = require('./db'); // Import the database connection
+require('dotenv').config(); // For environment variables
 
 const app = express();
 
+// Set up EJS as the templating engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 // Middleware for parsing request bodies
 app.use(express.urlencoded({ extended: false }));
-// To handle JSON payloads (data from an API request)
 app.use(express.json());
+
+// Serve static files (css styles)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Check database connection
 pool.connect((err) => {
@@ -82,16 +81,37 @@ const studentsRouter = express.Router();
 
 // Home route to serve the main page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.render('layout', { title: 'Home', activePage: 'home', content: 'index' });
 });
 
 // Serve static HTML files for course and student creation
 app.get('/web/courses/create', (req, res) => {
-    res.sendFile(path.join(__dirname, 'courses.html'));
+    res.render('layout', { title: 'Create Course', activePage: 'createCourse', content: 'createCourse' });
 });
 
 app.get('/web/students/create', (req, res) => {
-    res.sendFile(path.join(__dirname, 'students.html'));
+    res.render('layout', { title: 'Create Student', activePage: 'createStudent', content: 'createStudent' });
+});
+
+// Serve dynamic HTML files for viewing courses and students
+app.get('/web/courses/view', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT * FROM courses');
+        res.render('layout', { title: 'View Courses', activePage: 'viewCourses', content: 'viewCourses', courses: rows });
+    } catch (err) {
+        console.error('Error retrieving courses:', err);
+        res.status(500).send('An error occurred while retrieving courses');
+    }
+});
+
+app.get('/web/students/view', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT * FROM students');
+        res.render('layout', { title: 'View Students', activePage: 'viewStudents', content: 'viewStudents', students: rows });
+    } catch (err) {
+        console.error('Error retrieving students:', err);
+        res.status(500).send('An error occurred while retrieving students');
+    }
 });
 
 // Courses API Routes

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><%= title %></title>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div id="branding">
+                <h1>Learning Management System</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li class="<%= activePage === 'home' ? 'current' : '' %>"><a href="/">Home</a></li>
+                    <li class="<%= activePage === 'createCourse' ? 'current' : '' %>"><a href="/web/courses/create">Create Course</a></li>
+                    <li class="<%= activePage === 'createStudent' ? 'current' : '' %>"><a href="/web/students/create">Create Student</a></li>
+                    <li class="<%= activePage === 'viewCourses' ? 'current' : '' %>"><a href="/web/courses/view">View Courses</a></li>
+                    <li class="<%= activePage === 'viewStudents' ? 'current' : '' %>"><a href="/web/students/view">View Students</a></li>
+                </ul>
+            </nav>
+        </header>
+        <div class="content">
+            <%- include(content) %>
+        </div>
+        <footer>
+            <p>Learning Management System &copy; 2025</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+
+<h2>Students</h2>
+<table id="studentsTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Code</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% students.forEach(student => { %>
+            <tr>
+                <td><%= student.id %></td>
+                <td><%= student.name %></td>
+                <td><%= student.code %></td>
+            </tr>
+        <% }) %>
+    </tbody>
+</table>

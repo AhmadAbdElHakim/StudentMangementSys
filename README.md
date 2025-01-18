@@ -1,4 +1,4 @@
-# Student Management System
+# Learning Management System
 
 ## Prerequisites
 - Node.js

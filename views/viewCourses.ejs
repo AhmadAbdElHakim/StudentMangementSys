@@ -1,0 +1,22 @@
+
+<h2>Courses</h2>
+<table id="coursesTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% courses.forEach(course => { %>
+            <tr>
+                <td><%= course.id %></td>
+                <td><%= course.name %></td>
+                <td><%= course.code %></td>
+                <td><%= course.description %></td>
+            </tr>
+        <% }) %>
+    </tbody>
+</table>
