@@ -1,16 +1,23 @@
 // Import dependencies
+
+// Import Express lib for building the LMS web app
 const express = require('express');
 // For validating user input
 const Joi = require('joi');
+// For joining file paths
 const path = require('path');
+// For reading files
 const fs = require('fs');
-const pool = require('./db'); // Import the database connection
-require('dotenv').config(); // For environment variables
+// Import the database connection
+const pool = require('./db');
+// For environment variables (listening port)
+require('dotenv').config(); 
 
 const app = express();
 
 // Middleware for parsing request bodies
 app.use(express.urlencoded({ extended: false }));
+// To handle JSON payloads (data from an API request)
 app.use(express.json());
 
 // Check database connection
@@ -286,7 +293,7 @@ function validateStudentPut(student) {
     return schema.validate(student);
 }
 
-// Use Routers
+// Mount the routers to their respective paths
 app.use('/api/courses', coursesRouter);
 app.use('/api/students', studentsRouter);
 

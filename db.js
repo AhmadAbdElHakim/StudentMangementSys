@@ -1,3 +1,4 @@
+// Non-blocking PostgreSQL client
 const { Pool } = require('pg');
 require('dotenv').config();
 
