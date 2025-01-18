@@ -2,6 +2,8 @@
 const express = require('express');
 const Joi = require('joi');
 const path = require('path');
+const fs = require('fs');
+const pool = require('./db'); // Import the database connection
 require('dotenv').config(); // For environment variables
 
 const app = express();
@@ -10,18 +12,58 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Data store (mock database)
-const courses = [
-    { id: 1, name: 'Database', code: 'CSE452', description: 'Good' },
-    { id: 2, name: 'Multimedia', code: 'CSE458' },
-    { id: 3, name: 'Control', code: 'CSE462', description: 'Bad' }
-];
+// Check database connection
+pool.connect((err) => {
+    if (err) {
+        console.error('Failed to connect to the database:', err);
+    } else {
+        console.log('Connected to the database');
+    }
+});
 
-const students = [
-    { id: 1, name: 'Ahmad', code: '1600122' },
-    { id: 2, name: 'AbdELHakim', code: '1600133' },
-    { id: 3, name: 'Deif', code: '1600144' }
-];
+// Create database schema
+const createSchema = async () => {
+    try {
+        const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+        await pool.query(schema);
+        console.log('Database schema created');
+    } catch (err) {
+        console.error('Failed to create database schema:', err);
+    }
+};
+
+// Populate the database with initial data
+const populateDatabase = async () => {
+    try {
+        await pool.query(`
+            INSERT INTO courses (name, code, description) VALUES
+            ('Database', 'CSE452', 'Good'),
+            ('Multimedia', 'CSE458', ''),
+            ('Control', 'CSE462', 'Bad')
+            ON CONFLICT (code) DO NOTHING;
+        `);
+
+        await pool.query(`
+            INSERT INTO students (name, code) VALUES
+            ('Ahmad', '1600122'),
+            ('AbdELHakim', '1600133'),
+            ('Deif', '1600144')
+            ON CONFLICT (code) DO NOTHING;
+        `);
+
+        console.log('Database populated with initial data');
+    } catch (err) {
+        console.error('Failed to populate the database:', err);
+    }
+};
+
+// Initialize database
+const initializeDatabase = async () => {
+    await createSchema();
+    await populateDatabase();
+};
+
+initializeDatabase();
 
 // Utility function for standardized responses
 const createResponse = (success, message, data = null) => ({ success, message, data });
@@ -47,96 +89,149 @@ app.get('/web/students/create', (req, res) => {
 // Courses API Routes
 
 // GET request to retrieve all courses
-coursesRouter.get('/', (req, res) => {
-    res.json(createResponse(true, 'Courses retrieved successfully', courses));
+coursesRouter.get('/', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT * FROM courses');
+        res.json(createResponse(true, 'Courses retrieved successfully', rows));
+    } catch (err) {
+        console.error('Error retrieving courses:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while retrieving courses'));
+    }
 });
 
 // GET request to retrieve a specific course by ID
-coursesRouter.get('/:id', (req, res) => {
-    const course = courses.find(c => c.id === parseInt(req.params.id));
-    if (!course) {
-        return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
+coursesRouter.get('/:id', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT * FROM courses WHERE id = $1', [req.params.id]);
+        if (rows.length === 0) {
+            return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
+        }
+        res.json(createResponse(true, 'Course retrieved successfully', rows[0]));
+    } catch (err) {
+        console.error('Error retrieving course:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while retrieving the course'));
     }
-    res.json(createResponse(true, 'Course retrieved successfully', course));
 });
 
 // POST request to add a new course
-coursesRouter.post('/', validateMiddleware(validateCourse), (req, res) => {
-    const newCourse = {
-        id: courses.length ? courses[courses.length - 1].id + 1 : 1,
-        name: req.body.name,
-        code: req.body.code,
-        description: req.body.description || ''
-    };
-    courses.push(newCourse);
-    res.json(createResponse(true, 'Course added successfully', newCourse));
+coursesRouter.post('/', validateMiddleware(validateCourse), async (req, res) => {
+    try {
+        const { name, code, description } = req.body;
+        const { rows } = await pool.query(
+            'INSERT INTO courses (name, code, description) VALUES ($1, $2, $3) RETURNING *',
+            [name, code, description]
+        );
+        res.json(createResponse(true, 'Course added successfully', rows[0]));
+    } catch (err) {
+        console.error('Error adding course:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while adding the course'));
+    }
 });
 
 // PUT request to update an existing course by ID
-coursesRouter.put('/:id', validateMiddleware(validateCoursePut), (req, res) => {
-    const course = courses.find(c => c.id === parseInt(req.params.id));
-    if (!course) {
-        return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
+coursesRouter.put('/:id', validateMiddleware(validateCoursePut), async (req, res) => {
+    try {
+        const { name, code, description } = req.body;
+        const { rows } = await pool.query(
+            'UPDATE courses SET name = $1, code = $2, description = $3 WHERE id = $4 RETURNING *',
+            [name, code, description, req.params.id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
+        }
+        res.json(createResponse(true, 'Course updated successfully', rows[0]));
+    } catch (err) {
+        console.error('Error updating course:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while updating the course'));
     }
-    Object.assign(course, req.body);
-    res.json(createResponse(true, 'Course updated successfully', course));
 });
 
 // DELETE request to remove a course by ID
-coursesRouter.delete('/:id', (req, res) => {
-    const courseIndex = courses.findIndex(c => c.id === parseInt(req.params.id));
-    if (courseIndex === -1) {
-        return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
+coursesRouter.delete('/:id', async (req, res) => {
+    try {
+        const { rows } = await pool.query('DELETE FROM courses WHERE id = $1 RETURNING *', [req.params.id]);
+        if (rows.length === 0) {
+            return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
+        }
+        res.json(createResponse(true, 'Course deleted successfully', rows[0]));
+    } catch (err) {
+        console.error('Error deleting course:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while deleting the course'));
     }
-    const deletedCourse = courses.splice(courseIndex, 1)[0];
-    res.json(createResponse(true, 'Course deleted successfully', deletedCourse));
 });
 
 // Students API Routes
 
 // GET request to retrieve all students
-studentsRouter.get('/', (req, res) => {
-    res.json(createResponse(true, 'Students retrieved successfully', students));
+studentsRouter.get('/', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT * FROM students');
+        res.json(createResponse(true, 'Students retrieved successfully', rows));
+    } catch (err) {
+        console.error('Error retrieving students:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while retrieving students'));
+    }
 });
 
 // GET request to retrieve a specific student by ID
-studentsRouter.get('/:id', (req, res) => {
-    const student = students.find(s => s.id === parseInt(req.params.id));
-    if (!student) {
-        return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
+studentsRouter.get('/:id', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT * FROM students WHERE id = $1', [req.params.id]);
+        if (rows.length === 0) {
+            return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
+        }
+        res.json(createResponse(true, 'Student retrieved successfully', rows[0]));
+    } catch (err) {
+        console.error('Error retrieving student:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while retrieving the student'));
     }
-    res.json(createResponse(true, 'Student retrieved successfully', student));
 });
 
 // POST request to add a new student
-studentsRouter.post('/', validateMiddleware(validateStudent), (req, res) => {
-    const newStudent = {
-        id: students.length ? students[students.length - 1].id + 1 : 1,
-        name: req.body.name,
-        code: req.body.code
-    };
-    students.push(newStudent);
-    res.json(createResponse(true, 'Student added successfully', newStudent));
+studentsRouter.post('/', validateMiddleware(validateStudent), async (req, res) => {
+    try {
+        const { name, code } = req.body;
+        const { rows } = await pool.query(
+            'INSERT INTO students (name, code) VALUES ($1, $2) RETURNING *',
+            [name, code]
+        );
+        res.json(createResponse(true, 'Student added successfully', rows[0]));
+    } catch (err) {
+        console.error('Error adding student:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while adding the student'));
+    }
 });
 
 // PUT request to update an existing student by ID
-studentsRouter.put('/:id', validateMiddleware(validateStudentPut), (req, res) => {
-    const student = students.find(s => s.id === parseInt(req.params.id));
-    if (!student) {
-        return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
+studentsRouter.put('/:id', validateMiddleware(validateStudentPut), async (req, res) => {
+    try {
+        const { name, code } = req.body;
+        const { rows } = await pool.query(
+            'UPDATE students SET name = $1, code = $2 WHERE id = $3 RETURNING *',
+            [name, code, req.params.id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
+        }
+        res.json(createResponse(true, 'Student updated successfully', rows[0]));
+    } catch (err) {
+        console.error('Error updating student:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while updating the student'));
     }
-    Object.assign(student, req.body);
-    res.json(createResponse(true, 'Student updated successfully', student));
 });
 
 // DELETE request to remove a student by ID
-studentsRouter.delete('/:id', (req, res) => {
-    const studentIndex = students.findIndex(s => s.id === parseInt(req.params.id));
-    if (studentIndex === -1) {
-        return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
+studentsRouter.delete('/:id', async (req, res) => {
+    try {
+        const { rows } = await pool.query('DELETE FROM students WHERE id = $1 RETURNING *', [req.params.id]);
+        if (rows.length === 0) {
+            return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
+        }
+        res.json(createResponse(true, 'Student deleted successfully', rows[0]));
+    } catch (err) {
+        console.error('Error deleting student:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while deleting the student'));
     }
-    const deletedStudent = students.splice(studentIndex, 1)[0];
-    res.json(createResponse(true, 'Student deleted successfully', deletedStudent));
 });
 
 // Middleware Functions for Validation
@@ -196,7 +291,7 @@ app.use('/api/students', studentsRouter);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
-    console.error(err);
+    console.error('Unhandled error:', err);
     res.status(500).json(createResponse(false, 'An unexpected error occurred'));
 });
 

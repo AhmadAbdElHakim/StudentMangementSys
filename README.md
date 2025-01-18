@@ -3,6 +3,7 @@
 ## Prerequisites
 - Node.js
 - npm (Node Package Manager)
+- PostgreSQL
 
 ## Installation
 1. Clone the repository:
@@ -16,6 +17,20 @@
 3. Install the dependencies:
     ```bash
     npm install
+    ```
+
+## Database Setup
+1. Create a PostgreSQL database and user.
+2. Execute the `schema.sql` file to create the necessary tables:
+    ```bash
+    psql -U yourusername -d yourdatabase -f schema.sql
+    ```
+3. Update `.env` file and add your database connection details or set them as environment variables in the service app:
+    ```dotenv
+    DB_HOST="your_postgresql_host"
+    DB_USER="your_postgresql_user"
+    DB_PASSWORD="your_postgresql_password"
+    DB_NAME="your_postgresql_database"
     ```
 
 ## Running the Application
