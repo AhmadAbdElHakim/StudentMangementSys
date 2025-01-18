@@ -1,5 +1,6 @@
 // Import dependencies
 const express = require('express');
+// For validating user input
 const Joi = require('joi');
 const path = require('path');
 const fs = require('fs');
