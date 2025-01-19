@@ -18,13 +18,25 @@
                 <td>
                     <ul>
                         <% student.enrolledCourses.forEach(course => { %>
-                            <li><%= course.name %> (<%= course.code %>)</li>
+                            <li style="display: flex; justify-content: space-between; align-items: center;">
+                                <span><%= course.name %> (<%= course.code %>)</span>
+                                <form action="/api/students/<%= student.code %>/unenroll?_method=DELETE" method="post" style="display:inline;">
+                                    <input type="hidden" name="courseCode" value="<%= course.code %>">
+                                    <button type="submit" class="unenroll-button">Unenroll</button>
+                                </form>
+                            </li>
                         <% }) %>
                     </ul>
                 </td>
-                <td>
+                <td style="text-align: center;">
                     <form action="/api/students/<%= student.code %>?_method=DELETE" method="post" style="display:inline;">
-                        <button type="submit">Delete</button>
+                        <button type="submit" class="delete-button">Delete</button>
+                    </form>
+                    <br>
+                    <form action="/api/students/<%= student.code %>/enroll" method="post" class="inline-form">
+                        <label for="courseCode" style="text-align: left;">Enroll in Course:</label>
+                        <input type="text" id="courseCode" name="courseCode" placeholder="Course Code">
+                        <button type="submit">Enroll</button>
                     </form>
                 </td>
             </tr>

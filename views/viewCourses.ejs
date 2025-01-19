@@ -16,9 +16,9 @@
                 <td><%= course.name %></td>
                 <td><%= course.code %></td>
                 <td><%= course.description %></td>
-                <td>
+                <td style="text-align: center;">
                     <form action="/api/courses/<%= course.code %>?_method=DELETE" method="post" style="display:inline;">
-                        <button type="submit">Delete</button>
+                        <button type="submit" class="delete-button">Delete</button>
                     </form>
                 </td>
             </tr>

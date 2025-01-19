@@ -295,10 +295,10 @@ studentsRouter.post('/:code/enroll', async (req, res) => {
     try {
         const { courseCode } = req.body;
         const enrollment = await studentService.enrollInCourse(req.params.code, courseCode);
-        res.json(createResponse(true, 'Student enrolled in course successfully', enrollment));
+        res.redirect('/web/students/view');
     } catch (err) {
         console.error('Error enrolling student in course:', err);
-        res.status(500).json(createResponse(false, 'An error occurred while enrolling student in course'));
+        res.status(500).send('An error occurred while enrolling student in course');
     }
 });
 
@@ -322,10 +322,10 @@ studentsRouter.delete('/:code/unenroll', async (req, res) => {
     try {
         const { courseCode } = req.body;
         const unenrollment = await studentService.unenrollFromCourse(req.params.code, courseCode);
-        res.json(createResponse(true, 'Student unenrolled from course successfully', unenrollment));
+        res.redirect('/web/students/view');
     } catch (err) {
         console.error('Error unenrolling student from course:', err);
-        res.status(500).json(createResponse(false, 'An error occurred while unenrolling student from course'));
+        res.status(500).send('An error occurred while unenrolling student from course');
     }
 });
 
