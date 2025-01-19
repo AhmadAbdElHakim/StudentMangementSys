@@ -77,29 +77,38 @@ initializeDatabase();
 // Utility function for standardized responses
 const createResponse = (success, message, data = null) => ({ success, message, data });
 
+// Helper functions for rendering layout
+const renderWithMessage = (res, view, options, message = null) => {
+    res.render('layout', {
+        ...options,
+        content: view,
+        message
+    });
+};
+
 // Routes
 const coursesRouter = express.Router();
 const studentsRouter = express.Router();
 
 // Home route to serve the main page
 app.get('/', (req, res) => {
-    res.render('layout', { title: 'Home', activePage: 'home', content: 'index' });
+    renderWithMessage(res, 'index', { title: 'Home', activePage: 'home' });
 });
 
 // Serve static HTML files for course and student creation
 app.get('/web/courses/create', (req, res) => {
-    res.render('layout', { title: 'Create Course', activePage: 'createCourse', content: 'createCourse' });
+    renderWithMessage(res, 'createCourse', { title: 'Create Course', activePage: 'createCourse' });
 });
 
 app.get('/web/students/create', (req, res) => {
-    res.render('layout', { title: 'Create Student', activePage: 'createStudent', content: 'createStudent' });
+    renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' });
 });
 
 // Serve dynamic HTML files for viewing courses and students
 app.get('/web/courses/view', async (req, res) => {
     try {
         const courses = await courseService.getAllCourses();
-        res.render('layout', { title: 'View Courses', activePage: 'viewCourses', content: 'viewCourses', courses: courses });
+        renderWithMessage(res, 'viewCourses', { title: 'View Courses', activePage: 'viewCourses', courses });
     } catch (err) {
         console.error('Error retrieving courses:', err);
         res.status(500).send('An error occurred while retrieving courses');
@@ -109,7 +118,7 @@ app.get('/web/courses/view', async (req, res) => {
 app.get('/web/students/view', async (req, res) => {
     try {
         const students = await studentService.getAllStudents();
-        res.render('layout', { title: 'View Students', activePage: 'viewStudents', content: 'viewStudents', students: students });
+        renderWithMessage(res, 'viewStudents', { title: 'View Students', activePage: 'viewStudents', students });
     } catch (err) {
         console.error('Error retrieving students:', err);
         res.status(500).send('An error occurred while retrieving students');
@@ -148,10 +157,10 @@ coursesRouter.post('/', validateMiddleware(validateCourse), async (req, res) => 
     try {
         const { name, code, description } = req.body;
         const course = await courseService.addCourse(name, code, description);
-        res.json(createResponse(true, 'Course added successfully', course));
+        renderWithMessage(res, 'createCourse', { title: 'Create Course', activePage: 'createCourse' }, { type: 'success', text: 'Course added successfully' });
     } catch (err) {
         console.error('Error adding course:', err);
-        res.status(500).json(createResponse(false, 'An error occurred while adding the course'));
+        renderWithMessage(res, 'createCourse', { title: 'Create Course', activePage: 'createCourse' }, { type: 'error', text: 'An error occurred while adding the course' });
     }
 });
 
@@ -163,10 +172,10 @@ coursesRouter.put('/:id', validateMiddleware(validateCoursePut), async (req, res
         if (!course) {
             return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Course updated successfully', course));
+        renderWithMessage(res, 'updateCourse', { title: 'Update Course', activePage: 'updateCourse' }, { type: 'success', text: 'Course updated successfully' });
     } catch (err) {
         console.error('Error updating course:', err);
-        res.status(500).json(createResponse(false, 'An error occurred while updating the course'));
+        renderWithMessage(res, 'updateCourse', { title: 'Update Course', activePage: 'updateCourse' }, { type: 'error', text: 'An error occurred while updating the course' });
     }
 });
 
@@ -177,10 +186,10 @@ coursesRouter.delete('/:id', async (req, res) => {
         if (!course) {
             return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Course deleted successfully', course));
+        renderWithMessage(res, 'deleteCourse', { title: 'Delete Course', activePage: 'deleteCourse' }, { type: 'success', text: 'Course deleted successfully' });
     } catch (err) {
         console.error('Error deleting course:', err);
-        res.status(500).json(createResponse(false, 'An error occurred while deleting the course'));
+        renderWithMessage(res, 'deleteCourse', { title: 'Delete Course', activePage: 'deleteCourse' }, { type: 'error', text: 'An error occurred while deleting the course' });
     }
 });
 
@@ -216,10 +225,10 @@ studentsRouter.post('/', validateMiddleware(validateStudent), async (req, res) =
     try {
         const { name, code } = req.body;
         const student = await studentService.addStudent(name, code);
-        res.json(createResponse(true, 'Student added successfully', student));
+        renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' }, { type: 'success', text: 'Student added successfully' });
     } catch (err) {
         console.error('Error adding student:', err);
-        res.status(500).json(createResponse(false, 'An error occurred while adding the student'));
+        renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' }, { type: 'error', text: 'An error occurred while adding the student' });
     }
 });
 
@@ -231,10 +240,10 @@ studentsRouter.put('/:id', validateMiddleware(validateStudentPut), async (req, r
         if (!student) {
             return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Student updated successfully', student));
+        renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' }, { type: 'success', text: 'Student updated successfully' });
     } catch (err) {
         console.error('Error updating student:', err);
-        res.status(500).json(createResponse(false, 'An error occurred while updating the student'));
+        renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' }, { type: 'error', text: 'An error occurred while updating the student' });
     }
 });
 
@@ -245,10 +254,10 @@ studentsRouter.delete('/:id', async (req, res) => {
         if (!student) {
             return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Student deleted successfully', student));
+        renderWithMessage(res, 'deleteStudent', { title: 'Delete Student', activePage: 'deleteStudent' }, { type: 'success', text: 'Student deleted successfully' });
     } catch (err) {
         console.error('Error deleting student:', err);
-        res.status(500).json(createResponse(false, 'An error occurred while deleting the student'));
+        renderWithMessage(res, 'deleteStudent', { title: 'Delete Student', activePage: 'deleteStudent' }, { type: 'error', text: 'An error occurred while deleting the student' });
     }
 });
 

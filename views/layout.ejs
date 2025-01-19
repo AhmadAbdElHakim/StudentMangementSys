@@ -21,6 +21,9 @@
             </nav>
         </header>
         <div class="content">
+            <% if (message) { %>
+                <div class="message <%= message.type %>"><%= message.text %></div>
+            <% } %>
             <%- include(content) %>
         </div>
         <footer>
