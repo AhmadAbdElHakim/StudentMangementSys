@@ -1,11 +1,25 @@
 // Import dependencies
-const express = require('express');
-const Joi = require('joi');
-const path = require('path');
-const fs = require('fs');
-const studentService = require('./services/studentService');
-const courseService = require('./services/courseService');
-require('dotenv').config(); // For environment variables
+import express from 'express';
+import Joi from 'joi';
+import path from 'path';
+import fs from 'fs';
+import fetch from 'node-fetch';
+
+// For environment variables
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Since we are using ESM (ECMAScript Modules) instead of CJS (CommonJS)
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+import pool from './db.js';
+import studentService from './services/studentService.js';
+import courseService from './services/courseService.js';
+
 
 const app = express();
 
@@ -21,7 +35,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Check database connection
-const pool = require('./db');
 pool.connect((err) => {
     if (err) {
         console.error('Failed to connect to the database:', err);
@@ -107,8 +120,13 @@ app.get('/web/students/create', (req, res) => {
 // Serve dynamic HTML files for viewing courses and students
 app.get('/web/courses/view', async (req, res) => {
     try {
-        const courses = await courseService.getAllCourses();
-        renderWithMessage(res, 'viewCourses', { title: 'View Courses', activePage: 'viewCourses', courses });
+        const response = await fetch(`${req.protocol}://${req.get('host')}/api/courses`);
+        const data = await response.json();
+        if (data.success) {
+            renderWithMessage(res, 'viewCourses', { title: 'View Courses', activePage: 'viewCourses', courses: data.data });
+        } else {
+            res.status(500).send('An error occurred while retrieving students');
+        }
     } catch (err) {
         console.error('Error retrieving courses:', err);
         res.status(500).send('An error occurred while retrieving courses');
@@ -117,8 +135,13 @@ app.get('/web/courses/view', async (req, res) => {
 
 app.get('/web/students/view', async (req, res) => {
     try {
-        const students = await studentService.getAllStudents();
-        renderWithMessage(res, 'viewStudents', { title: 'View Students', activePage: 'viewStudents', students });
+        const response = await fetch(`${req.protocol}://${req.get('host')}/api/students`);
+        const data = await response.json();
+        if (data.success) {
+            renderWithMessage(res, 'viewStudents', { title: 'View Students', activePage: 'viewStudents', students: data.data });
+        } else {
+            res.status(500).send('An error occurred while retrieving students');
+        }
     } catch (err) {
         console.error('Error retrieving students:', err);
         res.status(500).send('An error occurred while retrieving students');

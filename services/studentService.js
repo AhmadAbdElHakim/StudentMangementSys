@@ -1,18 +1,17 @@
-const pool = require('../db');
+import pool from '../db.js';
 
 const studentService = {
-
-    getAllStudents : async () => {
+    getAllStudents: async () => {
         const { rows } = await pool.query('SELECT * FROM students');
         return rows;
     },
 
-    getStudentById : async (id) => {
+    getStudentById: async (id) => {
         const { rows } = await pool.query('SELECT * FROM students WHERE id = $1', [id]);
         return rows[0];
     },
 
-    addStudent : async (name, code) => {
+    addStudent: async (name, code) => {
         const { rows } = await pool.query(
             'INSERT INTO students (name, code) VALUES ($1, $2) RETURNING *',
             [name, code]
@@ -20,7 +19,7 @@ const studentService = {
         return rows[0];
     },
 
-    updateStudent : async (id, name, code) => {
+    updateStudent: async (id, name, code) => {
         const { rows } = await pool.query(
             'UPDATE students SET name = $1, code = $2 WHERE id = $3 RETURNING *',
             [name, code, id]
@@ -28,10 +27,10 @@ const studentService = {
         return rows[0];
     },
 
-    deleteStudent : async (id) => {
+    deleteStudent: async (id) => {
         const { rows } = await pool.query('DELETE FROM students WHERE id = $1 RETURNING *', [id]);
         return rows[0];
     },
 };
 
-module.exports = studentService;
+export default studentService;

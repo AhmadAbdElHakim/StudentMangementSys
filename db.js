@@ -1,6 +1,8 @@
 // Non-blocking PostgreSQL client
-const { Pool } = require('pg');
-require('dotenv').config();
+import pkg from 'pg';
+const { Pool } = pkg;
+import dotenv from 'dotenv';
+dotenv.config();
 
 // PostgreSQL connection pool
 const pool = new Pool({
@@ -12,4 +14,4 @@ const pool = new Pool({
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
 });
 
-module.exports = pool;
+export default pool;
