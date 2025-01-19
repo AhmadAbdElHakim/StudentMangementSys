@@ -3,7 +3,8 @@ const express = require('express');
 const Joi = require('joi');
 const path = require('path');
 const fs = require('fs');
-const pool = require('./db'); // Import the database connection
+const studentService = require('./services/studentService');
+const courseService = require('./services/courseService');
 require('dotenv').config(); // For environment variables
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Check database connection
+const pool = require('./db');
 pool.connect((err) => {
     if (err) {
         console.error('Failed to connect to the database:', err);
@@ -96,8 +98,8 @@ app.get('/web/students/create', (req, res) => {
 // Serve dynamic HTML files for viewing courses and students
 app.get('/web/courses/view', async (req, res) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM courses');
-        res.render('layout', { title: 'View Courses', activePage: 'viewCourses', content: 'viewCourses', courses: rows });
+        const courses = await courseService.getAllCourses();
+        res.render('layout', { title: 'View Courses', activePage: 'viewCourses', content: 'viewCourses', courses: courses });
     } catch (err) {
         console.error('Error retrieving courses:', err);
         res.status(500).send('An error occurred while retrieving courses');
@@ -106,8 +108,8 @@ app.get('/web/courses/view', async (req, res) => {
 
 app.get('/web/students/view', async (req, res) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM students');
-        res.render('layout', { title: 'View Students', activePage: 'viewStudents', content: 'viewStudents', students: rows });
+        const students = await studentService.getAllStudents();
+        res.render('layout', { title: 'View Students', activePage: 'viewStudents', content: 'viewStudents', students: students });
     } catch (err) {
         console.error('Error retrieving students:', err);
         res.status(500).send('An error occurred while retrieving students');
@@ -119,8 +121,8 @@ app.get('/web/students/view', async (req, res) => {
 // GET request to retrieve all courses
 coursesRouter.get('/', async (req, res) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM courses');
-        res.json(createResponse(true, 'Courses retrieved successfully', rows));
+        const courses = await courseService.getAllCourses();
+        res.json(createResponse(true, 'Courses retrieved successfully', courses));
     } catch (err) {
         console.error('Error retrieving courses:', err);
         res.status(500).json(createResponse(false, 'An error occurred while retrieving courses'));
@@ -130,11 +132,11 @@ coursesRouter.get('/', async (req, res) => {
 // GET request to retrieve a specific course by ID
 coursesRouter.get('/:id', async (req, res) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM courses WHERE id = $1', [req.params.id]);
-        if (rows.length === 0) {
+        const course = await courseService.getCourseById(req.params.id);
+        if (!course) {
             return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Course retrieved successfully', rows[0]));
+        res.json(createResponse(true, 'Course retrieved successfully', course));
     } catch (err) {
         console.error('Error retrieving course:', err);
         res.status(500).json(createResponse(false, 'An error occurred while retrieving the course'));
@@ -145,11 +147,8 @@ coursesRouter.get('/:id', async (req, res) => {
 coursesRouter.post('/', validateMiddleware(validateCourse), async (req, res) => {
     try {
         const { name, code, description } = req.body;
-        const { rows } = await pool.query(
-            'INSERT INTO courses (name, code, description) VALUES ($1, $2, $3) RETURNING *',
-            [name, code, description]
-        );
-        res.json(createResponse(true, 'Course added successfully', rows[0]));
+        const course = await courseService.addCourse(name, code, description);
+        res.json(createResponse(true, 'Course added successfully', course));
     } catch (err) {
         console.error('Error adding course:', err);
         res.status(500).json(createResponse(false, 'An error occurred while adding the course'));
@@ -160,14 +159,11 @@ coursesRouter.post('/', validateMiddleware(validateCourse), async (req, res) => 
 coursesRouter.put('/:id', validateMiddleware(validateCoursePut), async (req, res) => {
     try {
         const { name, code, description } = req.body;
-        const { rows } = await pool.query(
-            'UPDATE courses SET name = $1, code = $2, description = $3 WHERE id = $4 RETURNING *',
-            [name, code, description, req.params.id]
-        );
-        if (rows.length === 0) {
+        const course = await courseService.updateCourse(req.params.id, name, code, description);
+        if (!course) {
             return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Course updated successfully', rows[0]));
+        res.json(createResponse(true, 'Course updated successfully', course));
     } catch (err) {
         console.error('Error updating course:', err);
         res.status(500).json(createResponse(false, 'An error occurred while updating the course'));
@@ -177,11 +173,11 @@ coursesRouter.put('/:id', validateMiddleware(validateCoursePut), async (req, res
 // DELETE request to remove a course by ID
 coursesRouter.delete('/:id', async (req, res) => {
     try {
-        const { rows } = await pool.query('DELETE FROM courses WHERE id = $1 RETURNING *', [req.params.id]);
-        if (rows.length === 0) {
+        const course = await courseService.deleteCourse(req.params.id);
+        if (!course) {
             return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Course deleted successfully', rows[0]));
+        res.json(createResponse(true, 'Course deleted successfully', course));
     } catch (err) {
         console.error('Error deleting course:', err);
         res.status(500).json(createResponse(false, 'An error occurred while deleting the course'));
@@ -193,8 +189,8 @@ coursesRouter.delete('/:id', async (req, res) => {
 // GET request to retrieve all students
 studentsRouter.get('/', async (req, res) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM students');
-        res.json(createResponse(true, 'Students retrieved successfully', rows));
+        const students = await studentService.getAllStudents();
+        res.json(createResponse(true, 'Students retrieved successfully', students));
     } catch (err) {
         console.error('Error retrieving students:', err);
         res.status(500).json(createResponse(false, 'An error occurred while retrieving students'));
@@ -204,11 +200,11 @@ studentsRouter.get('/', async (req, res) => {
 // GET request to retrieve a specific student by ID
 studentsRouter.get('/:id', async (req, res) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM students WHERE id = $1', [req.params.id]);
-        if (rows.length === 0) {
+        const student = await studentService.getStudentById(req.params.id);
+        if (!student) {
             return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Student retrieved successfully', rows[0]));
+        res.json(createResponse(true, 'Student retrieved successfully', student));
     } catch (err) {
         console.error('Error retrieving student:', err);
         res.status(500).json(createResponse(false, 'An error occurred while retrieving the student'));
@@ -219,11 +215,8 @@ studentsRouter.get('/:id', async (req, res) => {
 studentsRouter.post('/', validateMiddleware(validateStudent), async (req, res) => {
     try {
         const { name, code } = req.body;
-        const { rows } = await pool.query(
-            'INSERT INTO students (name, code) VALUES ($1, $2) RETURNING *',
-            [name, code]
-        );
-        res.json(createResponse(true, 'Student added successfully', rows[0]));
+        const student = await studentService.addStudent(name, code);
+        res.json(createResponse(true, 'Student added successfully', student));
     } catch (err) {
         console.error('Error adding student:', err);
         res.status(500).json(createResponse(false, 'An error occurred while adding the student'));
@@ -234,14 +227,11 @@ studentsRouter.post('/', validateMiddleware(validateStudent), async (req, res) =
 studentsRouter.put('/:id', validateMiddleware(validateStudentPut), async (req, res) => {
     try {
         const { name, code } = req.body;
-        const { rows } = await pool.query(
-            'UPDATE students SET name = $1, code = $2 WHERE id = $3 RETURNING *',
-            [name, code, req.params.id]
-        );
-        if (rows.length === 0) {
+        const student = await studentService.updateStudent(req.params.id, name, code);
+        if (!student) {
             return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Student updated successfully', rows[0]));
+        res.json(createResponse(true, 'Student updated successfully', student));
     } catch (err) {
         console.error('Error updating student:', err);
         res.status(500).json(createResponse(false, 'An error occurred while updating the student'));
@@ -251,11 +241,11 @@ studentsRouter.put('/:id', validateMiddleware(validateStudentPut), async (req, r
 // DELETE request to remove a student by ID
 studentsRouter.delete('/:id', async (req, res) => {
     try {
-        const { rows } = await pool.query('DELETE FROM students WHERE id = $1 RETURNING *', [req.params.id]);
-        if (rows.length === 0) {
+        const student = await studentService.deleteStudent(req.params.id);
+        if (!student) {
             return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
         }
-        res.json(createResponse(true, 'Student deleted successfully', rows[0]));
+        res.json(createResponse(true, 'Student deleted successfully', student));
     } catch (err) {
         console.error('Error deleting student:', err);
         res.status(500).json(createResponse(false, 'An error occurred while deleting the student'));
