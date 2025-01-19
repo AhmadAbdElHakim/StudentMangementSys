@@ -6,6 +6,7 @@
             <th>Name</th>
             <th>Code</th>
             <th>Description</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -15,6 +16,11 @@
                 <td><%= course.name %></td>
                 <td><%= course.code %></td>
                 <td><%= course.description %></td>
+                <td>
+                    <form action="/api/courses/<%= course.code %>?_method=DELETE" method="post" style="display:inline;">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
             </tr>
         <% }) %>
     </tbody>

@@ -20,7 +20,6 @@ import pool from './db.js';
 import studentService from './services/studentService.js';
 import courseService from './services/courseService.js';
 
-
 const app = express();
 
 // Set up EJS as the templating engine
@@ -30,6 +29,10 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware for parsing request bodies
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+// Middleware for method override
+import methodOverride from 'method-override';
+app.use(methodOverride('_method'));
 
 // Serve static files (css styles)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -117,6 +120,14 @@ app.get('/web/students/create', (req, res) => {
     renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' });
 });
 
+app.get('/web/courses/update', (req, res) => {
+    renderWithMessage(res, 'updateCourse', { title: 'Update Course', activePage: 'updateCourse' });
+});
+
+app.get('/web/students/update', (req, res) => {
+    renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' });
+});
+
 // Serve dynamic HTML files for viewing courses and students
 app.get('/web/courses/view', async (req, res) => {
     try {
@@ -125,7 +136,7 @@ app.get('/web/courses/view', async (req, res) => {
         if (data.success) {
             renderWithMessage(res, 'viewCourses', { title: 'View Courses', activePage: 'viewCourses', courses: data.data });
         } else {
-            res.status(500).send('An error occurred while retrieving students');
+            res.status(500).send('An error occurred while retrieving courses');
         }
     } catch (err) {
         console.error('Error retrieving courses:', err);
@@ -161,12 +172,12 @@ coursesRouter.get('/', async (req, res) => {
     }
 });
 
-// GET request to retrieve a specific course by ID
-coursesRouter.get('/:id', async (req, res) => {
+// GET request to retrieve a specific course by unique code
+coursesRouter.get('/:code', async (req, res) => {
     try {
-        const course = await courseService.getCourseById(req.params.id);
+        const course = await courseService.getCourseByCode(req.params.code);
         if (!course) {
-            return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
+            return res.status(404).json(createResponse(false, 'The course with the given unique code was not found'));
         }
         res.json(createResponse(true, 'Course retrieved successfully', course));
     } catch (err) {
@@ -187,13 +198,13 @@ coursesRouter.post('/', validateMiddleware(validateCourse), async (req, res) => 
     }
 });
 
-// PUT request to update an existing course by ID
-coursesRouter.put('/:id', validateMiddleware(validateCoursePut), async (req, res) => {
+// PUT request to update an existing course
+coursesRouter.put('/', validateMiddleware(validateCoursePut), async (req, res) => {
     try {
         const { name, code, description } = req.body;
-        const course = await courseService.updateCourse(req.params.id, name, code, description);
+        const course = await courseService.updateCourse(name, code, description);
         if (!course) {
-            return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
+            return res.status(404).json(createResponse(false, 'The course with the given unique code was not found'));
         }
         renderWithMessage(res, 'updateCourse', { title: 'Update Course', activePage: 'updateCourse' }, { type: 'success', text: 'Course updated successfully' });
     } catch (err) {
@@ -202,17 +213,17 @@ coursesRouter.put('/:id', validateMiddleware(validateCoursePut), async (req, res
     }
 });
 
-// DELETE request to remove a course by ID
-coursesRouter.delete('/:id', async (req, res) => {
+// DELETE request to remove a course by unique code
+coursesRouter.delete('/:code', async (req, res) => {
     try {
-        const course = await courseService.deleteCourse(req.params.id);
+        const course = await courseService.deleteCourse(req.params.code);
         if (!course) {
-            return res.status(404).json(createResponse(false, 'The course with the given ID was not found'));
+            return res.status(404).json(createResponse(false, 'The course with the given unique code was not found'));
         }
-        renderWithMessage(res, 'deleteCourse', { title: 'Delete Course', activePage: 'deleteCourse' }, { type: 'success', text: 'Course deleted successfully' });
+        res.redirect('/web/courses/view');
     } catch (err) {
         console.error('Error deleting course:', err);
-        renderWithMessage(res, 'deleteCourse', { title: 'Delete Course', activePage: 'deleteCourse' }, { type: 'error', text: 'An error occurred while deleting the course' });
+        res.status(500).send('An error occurred while deleting the course');
     }
 });
 
@@ -229,12 +240,12 @@ studentsRouter.get('/', async (req, res) => {
     }
 });
 
-// GET request to retrieve a specific student by ID
-studentsRouter.get('/:id', async (req, res) => {
+// GET request to retrieve a specific student by unique code
+studentsRouter.get('/:code', async (req, res) => {
     try {
-        const student = await studentService.getStudentById(req.params.id);
+        const student = await studentService.getStudentByCode(req.params.code);
         if (!student) {
-            return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
+            return res.status(404).json(createResponse(false, 'The student with the given unique code was not found'));
         }
         res.json(createResponse(true, 'Student retrieved successfully', student));
     } catch (err) {
@@ -255,13 +266,13 @@ studentsRouter.post('/', validateMiddleware(validateStudent), async (req, res) =
     }
 });
 
-// PUT request to update an existing student by ID
-studentsRouter.put('/:id', validateMiddleware(validateStudentPut), async (req, res) => {
+// PUT request to update an existing student
+studentsRouter.put('/', validateMiddleware(validateStudentPut), async (req, res) => {
     try {
         const { name, code } = req.body;
-        const student = await studentService.updateStudent(req.params.id, name, code);
+        const student = await studentService.updateStudent(name, code);
         if (!student) {
-            return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
+            return res.status(404).json(createResponse(false, 'The student with the given unique code was not found'));
         }
         renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' }, { type: 'success', text: 'Student updated successfully' });
     } catch (err) {
@@ -270,17 +281,17 @@ studentsRouter.put('/:id', validateMiddleware(validateStudentPut), async (req, r
     }
 });
 
-// DELETE request to remove a student by ID
-studentsRouter.delete('/:id', async (req, res) => {
+// DELETE request to remove a student by unique code
+studentsRouter.delete('/:code', async (req, res) => {
     try {
-        const student = await studentService.deleteStudent(req.params.id);
+        const student = await studentService.deleteStudent(req.params.code);
         if (!student) {
-            return res.status(404).json(createResponse(false, 'The student with the given ID was not found'));
+            return res.status(404).json(createResponse(false, 'The student with the given unique code was not found'));
         }
-        renderWithMessage(res, 'deleteStudent', { title: 'Delete Student', activePage: 'deleteStudent' }, { type: 'success', text: 'Student deleted successfully' });
+        res.redirect('/web/students/view');
     } catch (err) {
         console.error('Error deleting student:', err);
-        renderWithMessage(res, 'deleteStudent', { title: 'Delete Student', activePage: 'deleteStudent' }, { type: 'error', text: 'An error occurred while deleting the student' });
+        res.status(500).send('An error occurred while deleting the student');
     }
 });
 
