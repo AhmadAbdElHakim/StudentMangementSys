@@ -5,6 +5,7 @@
             <th>ID</th>
             <th>Name</th>
             <th>Code</th>
+            <th>Enrolled Courses</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -14,6 +15,13 @@
                 <td><%= student.id %></td>
                 <td><%= student.name %></td>
                 <td><%= student.code %></td>
+                <td>
+                    <ul>
+                        <% student.enrolledCourses.forEach(course => { %>
+                            <li><%= course.name %> (<%= course.code %>)</li>
+                        <% }) %>
+                    </ul>
+                </td>
                 <td>
                     <form action="/api/students/<%= student.code %>?_method=DELETE" method="post" style="display:inline;">
                         <button type="submit">Delete</button>

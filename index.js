@@ -76,6 +76,17 @@ const populateDatabase = async () => {
             ON CONFLICT (code) DO NOTHING;
         `);
 
+        await pool.query(`
+            INSERT INTO enrollments (student_code, course_code) VALUES
+            ('1600122', 'CSE452'),
+            ('1600122', 'CSE458'),
+            ('1600133', 'CSE452'),
+            ('1600133', 'CSE462'),
+            ('1600144', 'CSE458'),
+            ('1600144', 'CSE462')
+            ON CONFLICT (student_code, course_code) DO NOTHING;
+        `);
+
         console.log('Database populated with initial data');
     } catch (err) {
         console.error('Failed to populate the database:', err);
@@ -193,8 +204,13 @@ coursesRouter.post('/', validateMiddleware(validateCourse), async (req, res) => 
         const course = await courseService.addCourse(name, code, description);
         renderWithMessage(res, 'createCourse', { title: 'Create Course', activePage: 'createCourse' }, { type: 'success', text: 'Course added successfully' });
     } catch (err) {
-        console.error('Error adding course:', err);
-        renderWithMessage(res, 'createCourse', { title: 'Create Course', activePage: 'createCourse' }, { type: 'error', text: 'An error occurred while adding the course' });
+        if (err.code === '23505') { // Duplicate key error code in PostgreSQL
+            const message = `Course with code ${req.body.code} already exists. Please use the update page instead.`;
+            renderWithMessage(res, 'createCourse', { title: 'Create Course', activePage: 'createCourse' }, { type: 'error', text: message });
+        } else {
+            console.error('Error adding course:', err);
+            renderWithMessage(res, 'createCourse', { title: 'Create Course', activePage: 'createCourse' }, { type: 'error', text: 'An error occurred while adding the course' });
+        }
     }
 });
 
@@ -229,10 +245,13 @@ coursesRouter.delete('/:code', async (req, res) => {
 
 // Students API Routes
 
-// GET request to retrieve all students
+// GET request to retrieve all students with their enrolled courses
 studentsRouter.get('/', async (req, res) => {
     try {
         const students = await studentService.getAllStudents();
+        for (const student of students) {
+            student.enrolledCourses = await studentService.getEnrolledCourses(student.code);
+        }
         res.json(createResponse(true, 'Students retrieved successfully', students));
     } catch (err) {
         console.error('Error retrieving students:', err);
@@ -261,8 +280,25 @@ studentsRouter.post('/', validateMiddleware(validateStudent), async (req, res) =
         const student = await studentService.addStudent(name, code);
         renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' }, { type: 'success', text: 'Student added successfully' });
     } catch (err) {
-        console.error('Error adding student:', err);
-        renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' }, { type: 'error', text: 'An error occurred while adding the student' });
+        if (err.code === '23505') { // Duplicate key error code in PostgreSQL
+            const message = `Student with code ${req.body.code} already exists. Please use the update page instead.`;
+            renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' }, { type: 'error', text: message });
+        } else {
+            console.error('Error adding student:', err);
+            renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' }, { type: 'error', text: 'An error occurred while adding the student' });
+        }
+    }
+});
+
+// POST request to enroll a student in a course
+studentsRouter.post('/:code/enroll', async (req, res) => {
+    try {
+        const { courseCode } = req.body;
+        const enrollment = await studentService.enrollInCourse(req.params.code, courseCode);
+        res.json(createResponse(true, 'Student enrolled in course successfully', enrollment));
+    } catch (err) {
+        console.error('Error enrolling student in course:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while enrolling student in course'));
     }
 });
 
@@ -278,6 +314,18 @@ studentsRouter.put('/', validateMiddleware(validateStudentPut), async (req, res)
     } catch (err) {
         console.error('Error updating student:', err);
         renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' }, { type: 'error', text: 'An error occurred while updating the student' });
+    }
+});
+
+// DELETE request to unenroll a student from a course
+studentsRouter.delete('/:code/unenroll', async (req, res) => {
+    try {
+        const { courseCode } = req.body;
+        const unenrollment = await studentService.unenrollFromCourse(req.params.code, courseCode);
+        res.json(createResponse(true, 'Student unenrolled from course successfully', unenrollment));
+    } catch (err) {
+        console.error('Error unenrolling student from course:', err);
+        res.status(500).json(createResponse(false, 'An error occurred while unenrolling student from course'));
     }
 });
 
