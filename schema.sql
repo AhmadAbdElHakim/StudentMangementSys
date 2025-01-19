@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS students (
 CREATE TABLE IF NOT EXISTS enrollments (
     student_code VARCHAR(7) NOT NULL,
     course_code VARCHAR(6) NOT NULL,
+    -- composite primary key ensuring that each student can enroll in a course only once
     PRIMARY KEY (student_code, course_code),
     FOREIGN KEY (student_code) REFERENCES students(code) ON DELETE CASCADE,
     FOREIGN KEY (course_code) REFERENCES courses(code) ON DELETE CASCADE

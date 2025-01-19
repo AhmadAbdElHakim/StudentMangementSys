@@ -32,26 +32,26 @@ const studentService = {
         return rows[0];
     },
 
-    getEnrolledCourses: async (studentCode) => {
+    getEnrolledCourses: async (student_code) => {
         const { rows } = await pool.query(
             'SELECT courses.* FROM courses JOIN enrollments ON courses.code = enrollments.course_code WHERE enrollments.student_code = $1',
-            [studentCode]
+            [student_code]
         );
         return rows;
     },
 
-    enrollInCourse: async (studentCode, courseCode) => {
+    enrollInCourse: async (student_code, course_code) => {
         const { rows } = await pool.query(
             'INSERT INTO enrollments (student_code, course_code) VALUES ($1, $2) RETURNING *',
-            [studentCode, courseCode]
+            [student_code, course_code]
         );
         return rows[0];
     },
 
-    unenrollFromCourse: async (studentCode, courseCode) => {
+    unenrollFromCourse: async (student_code, course_code) => {
         const { rows } = await pool.query(
             'DELETE FROM enrollments WHERE student_code = $1 AND course_code = $2 RETURNING *',
-            [studentCode, courseCode]
+            [student_code, course_code]
         );
         return rows[0];
     }

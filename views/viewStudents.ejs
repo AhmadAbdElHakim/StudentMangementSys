@@ -21,7 +21,7 @@
                             <li style="display: flex; justify-content: space-between; align-items: center;">
                                 <span><%= course.name %> (<%= course.code %>)</span>
                                 <form action="/api/students/<%= student.code %>/unenroll?_method=DELETE" method="post" style="display:inline;">
-                                    <input type="hidden" name="courseCode" value="<%= course.code %>">
+                                    <input type="hidden" name="course_code" value="<%= course.code %>">
                                     <button type="submit" class="unenroll-button">Unenroll</button>
                                 </form>
                             </li>
@@ -34,8 +34,8 @@
                     </form>
                     <br>
                     <form action="/api/students/<%= student.code %>/enroll" method="post" class="inline-form">
-                        <label for="courseCode" style="text-align: left;">Enroll in Course:</label>
-                        <input type="text" id="courseCode" name="courseCode" placeholder="Course Code">
+                        <label for="course_code" style="text-align: left;">Enroll in Course:</label>
+                        <input type="text" id="course_code" name="course_code" placeholder="Course Code">
                         <button type="submit">Enroll</button>
                     </form>
                 </td>
