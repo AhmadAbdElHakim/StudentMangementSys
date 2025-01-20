@@ -18,7 +18,13 @@
                 <td><%= course.name %></td>
                 <td><%= course.code %></td>
                 <td><%= course.description %></td>
-                <td><%= course.staff_name %></td>
+                <td>
+                    <% if (course.staff) { %>
+                        <%= course.staff.name %> (<%= course.staff.code %>)
+                    <% } else { %>
+                        <span>No staff assigned</span>
+                    <% } %>
+                </td>
                 <td>
                     <% if (course.enrolledStudents && course.enrolledStudents.length > 0) { %>
                         <ul>

@@ -1,8 +1,17 @@
+CREATE TABLE IF NOT EXISTS staff (
+    id SERIAL,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(6) NOT NULL UNIQUE PRIMARY KEY,
+    title VARCHAR(255)
+);
+
 CREATE TABLE IF NOT EXISTS courses (
     id SERIAL,
     name VARCHAR(255) NOT NULL,
     code VARCHAR(6) NOT NULL UNIQUE PRIMARY KEY,
-    description TEXT
+    description TEXT,
+    staff_code VARCHAR(7) NOT NULL,
+    FOREIGN KEY (staff_code) REFERENCES staff(code) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS students (

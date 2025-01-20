@@ -32,28 +32,26 @@ const studentDataAccess = {
         return rows[0];
     },
 
-    getEnrolledCourses: async (student_code) => {
+    enrollInCourse: async (studentCode, courseCode) => {
+        await pool.query(
+            'INSERT INTO enrollments (student_code, course_code) VALUES ($1, $2)',
+            [studentCode, courseCode]
+        );
+    },
+
+    unenrollFromCourse: async (studentCode, courseCode) => {
+        await pool.query(
+            'DELETE FROM enrollments WHERE student_code = $1 AND course_code = $2',
+            [studentCode, courseCode]
+        );
+    },
+
+    getEnrolledCourses: async (studentCode) => {
         const { rows } = await pool.query(
-            'SELECT courses.* FROM courses JOIN enrollments ON courses.code = enrollments.course_code WHERE enrollments.student_code = $1',
-            [student_code]
+            'SELECT courses.name, courses.code FROM courses JOIN enrollments ON courses.code = enrollments.course_code WHERE enrollments.student_code = $1',
+            [studentCode]
         );
         return rows;
-    },
-
-    enrollInCourse: async (student_code, course_code) => {
-        const { rows } = await pool.query(
-            'INSERT INTO enrollments (student_code, course_code) VALUES ($1, $2) RETURNING *',
-            [student_code, course_code]
-        );
-        return rows[0];
-    },
-
-    unenrollFromCourse: async (student_code, course_code) => {
-        const { rows } = await pool.query(
-            'DELETE FROM enrollments WHERE student_code = $1 AND course_code = $2 RETURNING *',
-            [student_code, course_code]
-        );
-        return rows[0];
     },
 
     getTotalStudents: async () => {

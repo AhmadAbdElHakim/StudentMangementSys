@@ -19,6 +19,7 @@ import pool from './db.js';
 import coursesRouter from './routers/coursesRouter.js';
 import studentsRouter from './routers/studentsRouter.js';
 import statisticsRouter from './routers/statisticsRouter.js';
+import staffRouter from './routers/staffRouter.js';
 
 const app = express();
 
@@ -76,7 +77,7 @@ app.get('/', (req, res) => {
     renderWithMessage(res, 'index', { title: 'Home', activePage: 'home' });
 });
 
-// Serve static HTML files for course and student creation
+// Serve static HTML files for course, student, and staff creation
 app.get('/web/courses/create', (req, res) => {
     renderWithMessage(res, 'createCourse', { title: 'Create Course', activePage: 'createCourse' });
 });
@@ -85,6 +86,11 @@ app.get('/web/students/create', (req, res) => {
     renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' });
 });
 
+app.get('/web/staff/create', (req, res) => {
+    renderWithMessage(res, 'createStaff', { title: 'Create Staff', activePage: 'createStaff' });
+});
+
+// Serve static HTML files for course, student, and staff updates
 app.get('/web/courses/update', (req, res) => {
     renderWithMessage(res, 'updateCourse', { title: 'Update Course', activePage: 'updateCourse' });
 });
@@ -93,7 +99,11 @@ app.get('/web/students/update', (req, res) => {
     renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' });
 });
 
-// Serve dynamic HTML files for viewing courses and students
+app.get('/web/staff/update', (req, res) => {
+    renderWithMessage(res, 'updateStaff', { title: 'Update Staff', activePage: 'updateStaff' });
+});
+
+// Serve dynamic HTML files for viewing courses, students, and staff
 app.get('/web/courses/view', async (req, res) => {
     try {
         const response = await fetch(`${req.protocol}://${req.get('host')}/api/courses`);
@@ -124,6 +134,21 @@ app.get('/web/students/view', async (req, res) => {
     }
 });
 
+app.get('/web/staff/view', async (req, res) => {
+    try {
+        const response = await fetch(`${req.protocol}://${req.get('host')}/api/staff`);
+        const data = await response.json();
+        if (data.success) {
+            renderWithMessage(res, 'viewStaff', { title: 'View Staff', activePage: 'viewStaff', staff: data.data });
+        } else {
+            res.status(500).send('An error occurred while retrieving staff');
+        }
+    } catch (err) {
+        console.error('Error retrieving staff:', err);
+        res.status(500).send('An error occurred while retrieving staff');
+    }
+});
+
 // Serve the statistics page
 app.get('/web/statistics', (req, res) => {
     res.redirect('/api/statistics');
@@ -132,6 +157,7 @@ app.get('/web/statistics', (req, res) => {
 // Mount the routers to their respective paths
 app.use('/api/courses', coursesRouter);
 app.use('/api/students', studentsRouter);
+app.use('/api/staff', staffRouter);
 app.use('/api/statistics', statisticsRouter);
 
 // Error Handling Middleware

@@ -1,6 +1,6 @@
 import express from 'express';
 import courseDataAccess from '../dataAccess/courseDataAccess.js';
-import { createResponse, renderWithMessage, validateMiddleware, validateCourse, validateCoursePut } from '../utils.js';
+import { createResponse, renderWithMessage, validateMiddleware, validateCourse, validateCoursePut, handleGetAll, handleGetByCode, handlePost, handlePut, handleDelete } from '../utils.js';
 
 const router = express.Router();
 
@@ -10,6 +10,7 @@ router.get('/', async (req, res) => {
         const courses = await courseDataAccess.getAllCourses();
         for (const course of courses) {
             course.enrolledStudents = await courseDataAccess.getEnrolledStudents(course.code);
+            course.staff = await courseDataAccess.getStaffByCourseCode(course.code);
         }
         res.json(createResponse(true, 'Courses retrieved successfully', courses));
     } catch (err) {
@@ -26,6 +27,7 @@ router.get('/:code', async (req, res) => {
             return res.status(404).json(createResponse(false, 'The course with the given unique code was not found'));
         }
         course.enrolledStudents = await courseDataAccess.getEnrolledStudents(course.code);
+        course.staff = await courseDataAccess.getStaffByCourseCode(course.code);
         res.json(createResponse(true, 'Course retrieved successfully', course));
     } catch (err) {
         console.error('Error retrieving course:', err);
@@ -51,31 +53,20 @@ router.post('/', validateMiddleware(validateCourse), async (req, res) => {
 });
 
 // PUT request to update an existing course
-router.put('/', validateMiddleware(validateCoursePut), async (req, res) => {
-    try {
-        const { name, code, description } = req.body;
-        const course = await courseDataAccess.updateCourse(name, code, description);
-        if (!course) {
-            renderWithMessage(res, 'updateCourse', { title: 'Update Course', activePage: 'updateCourse' }, { type: 'error', text: 'The course with the given unique code was not found' });
-        }
-        renderWithMessage(res, 'updateCourse', { title: 'Update Course', activePage: 'updateCourse' }, { type: 'success', text: 'Course updated successfully' });
-    } catch (err) {
-        console.error('Error updating course:', err);
-        renderWithMessage(res, 'updateCourse', { title: 'Update Course', activePage: 'updateCourse' }, { type: 'error', text: 'An error occurred while updating the course' });
-    }
-});
+router.put('/', validateMiddleware(validateCoursePut), handlePut(courseDataAccess.updateCourse, 'Course', 'updateCourse'));
 
 // DELETE request to remove a course by unique code
-router.delete('/:code', async (req, res) => {
+router.delete('/:code', handleDelete(courseDataAccess.deleteCourse, 'Course', '/web/courses/view'));
+
+// POST request to assign staff to a course
+router.post('/assignStaff', async (req, res) => {
     try {
-        const course = await courseDataAccess.deleteCourse(req.params.code);
-        if (!course) {
-            return res.status(404).json(createResponse(false, 'The course with the given unique code was not found'));
-        }
+        const { course_code, staff_code } = req.body;
+        await courseDataAccess.assignStaffToCourse(course_code, staff_code);
         res.redirect('/web/courses/view');
     } catch (err) {
-        console.error('Error deleting course:', err);
-        res.status(500).send('An error occurred while deleting the course');
+        console.error('Error assigning staff to course:', err);
+        res.status(500).send('An error occurred while assigning staff to course');
     }
 });
 

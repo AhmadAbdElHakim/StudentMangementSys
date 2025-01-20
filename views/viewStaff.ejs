@@ -1,0 +1,39 @@
+<h1>Staff Members</h1>
+<table id="staffTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Title</th>
+            <th>Assigned Courses</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% staff.forEach(member => { %>
+            <tr>
+                <td><%= member.id %></td>
+                <td><%= member.name %></td>
+                <td><%= member.code %></td>
+                <td><%= member.title %></td>
+                <td>
+                    <% if (member.assignedCourses && member.assignedCourses.length > 0) { %>
+                        <ul>
+                            <% member.assignedCourses.forEach(course => { %>
+                                <li><%= course.name %> (<%= course.code %>)</li>
+                            <% }) %>
+                        </ul>
+                    <% } else { %>
+                        <span>No courses assigned</span>
+                    <% } %>
+                </td>
+                <td style="text-align: center;">
+                    <form action="/api/staff/<%= member.code %>?_method=DELETE" method="post" style="display:inline;">
+                        <button type="submit" class="delete-button">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        <% }) %>
+    </tbody>
+</table>
