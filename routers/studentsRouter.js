@@ -1,6 +1,6 @@
 import express from 'express';
 import studentDataAccess from '../dataAccess/studentDataAccess.js';
-import { createResponse, renderWithMessage, validateMiddleware, validateStudent, validateStudentPut } from '../utils.js';
+import { createResponse, renderWithMessage, validateMiddleware, validateStudent, validateStudentPut, handleGetByCode, handleDelete } from '../utils.js';
 
 const router = express.Router();
 
@@ -31,6 +31,8 @@ router.get('/:code', async (req, res) => {
         res.status(500).json(createResponse(false, 'An error occurred while retrieving the student'));
     }
 });
+
+// router.get('/:code', handleGetByCode(studentDataAccess.getStudentByCode, 'Student'));
 
 // POST request to add a new student
 router.post('/', validateMiddleware(validateStudent, 'createStudent', 'Student'), async (req, res) => {
@@ -89,17 +91,6 @@ router.delete('/:code/unenroll', async (req, res) => {
 });
 
 // DELETE request to remove a student by unique code
-router.delete('/:code', async (req, res) => {
-    try {
-        const student = await studentDataAccess.deleteStudent(req.params.code);
-        if (!student) {
-            return res.status(404).json(createResponse(false, 'The student with the given unique code was not found'));
-        }
-        res.redirect('/web/students/view');
-    } catch (err) {
-        console.error('Error deleting student:', err);
-        res.status(500).send('An error occurred while deleting the student');
-    }
-});
+router.delete('/:code', handleDelete(studentDataAccess.deleteStudent, 'Student', '/web/students/view'));
 
 export default router;

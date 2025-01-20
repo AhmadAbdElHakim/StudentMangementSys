@@ -1,6 +1,6 @@
 import express from 'express';
 import courseDataAccess from '../dataAccess/courseDataAccess.js';
-import { createResponse, renderWithMessage, validateMiddleware, validateCourse, validateCoursePut, handleGetAll, handleGetByCode, handlePost, handlePut, handleDelete } from '../utils.js';
+import { createResponse, renderWithMessage, validateMiddleware, validateCourse, validateCoursePut, handleGetByCode, handleDelete, handleAssignStaff } from '../utils.js';
 
 const router = express.Router();
 
@@ -38,6 +38,8 @@ router.get('/:code', async (req, res) => {
     }
 });
 
+// router.get('/:code', handleGetByCode(courseDataAccess.getCourseByCode, 'Course'));
+
 // POST request to add a new course
 router.post('/', validateMiddleware(validateCourse, 'createCourse', 'Course'), async (req, res) => {
     try {
@@ -70,32 +72,9 @@ router.put('/', validateMiddleware(validateCoursePut, 'updateCourse', 'Course'),
 });
 
 // DELETE request to remove a course by unique code
-router.delete('/:code', async (req, res) => {
-    try {
-        const courseCode = req.params.code;
-        console.log(`Deleting course with code: ${courseCode}`);
-        const course = await courseDataAccess.deleteCourse(courseCode);
-        if (!course) {
-            console.log(`Course with code ${courseCode} not found`);
-            return res.status(404).json(createResponse(false, 'The course with the given unique code was not found'));
-        }
-        res.redirect('/web/courses/view');
-    } catch (err) {
-        console.error('Error deleting course:', err);
-        res.status(500).send('An error occurred while deleting the course');
-    }
-});
+router.delete('/:code', handleDelete(courseDataAccess.deleteCourse, 'Course', '/web/courses/view'));
 
 // POST request to assign staff to a course
-router.post('/assignStaff', async (req, res) => {
-    try {
-        const { course_code, staff_code } = req.body;
-        await courseDataAccess.assignStaffToCourse(course_code, staff_code);
-        res.redirect('/web/courses/view');
-    } catch (err) {
-        console.error('Error assigning staff to course:', err);
-        res.status(500).send('An error occurred while assigning staff to course');
-    }
-});
+router.post('/assignStaff', handleAssignStaff(courseDataAccess.assignStaffToCourse));
 
 export default router;

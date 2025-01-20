@@ -1,7 +1,7 @@
 import express from 'express';
 import staffDataAccess from '../dataAccess/staffDataAccess.js';
 import courseDataAccess from '../dataAccess/courseDataAccess.js';
-import { createResponse, validateMiddleware, validateStaff, validateStaffPut, handleGetAll, handleGetByCode, handlePost, handlePut, handleDelete, renderWithMessage } from '../utils.js';
+import { createResponse, validateMiddleware, validateStaff, validateStaffPut, handleGetByCode, handleDelete, renderWithMessage } from '../utils.js';
 
 const router = express.Router();
 
