@@ -6,6 +6,8 @@
             <th>Name</th>
             <th>Code</th>
             <th>Description</th>
+            <th>Staff</th>
+            <th>Enrolled Students</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -16,6 +18,18 @@
                 <td><%= course.name %></td>
                 <td><%= course.code %></td>
                 <td><%= course.description %></td>
+                <td><%= course.staff_name %></td>
+                <td>
+                    <% if (course.enrolledStudents && course.enrolledStudents.length > 0) { %>
+                        <ul>
+                            <% course.enrolledStudents.forEach(student => { %>
+                                <li><%= student.name %> (<%= student.code %>)</li>
+                            <% }) %>
+                        </ul>
+                    <% } else { %>
+                        <span>No students enrolled</span>
+                    <% } %>
+                </td>
                 <td style="text-align: center;">
                     <form action="/api/courses/<%= course.code %>?_method=DELETE" method="post" style="display:inline;">
                         <button type="submit" class="delete-button">Delete</button>

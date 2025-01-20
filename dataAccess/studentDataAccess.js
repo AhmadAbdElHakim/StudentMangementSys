@@ -54,6 +54,11 @@ const studentDataAccess = {
             [student_code, course_code]
         );
         return rows[0];
+    },
+
+    getTotalStudents: async () => {
+        const { rows } = await pool.query('SELECT COUNT(*) AS total FROM students');
+        return parseInt(rows[0].total, 10);
     }
 };
 

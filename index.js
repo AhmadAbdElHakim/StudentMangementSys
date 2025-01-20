@@ -18,6 +18,7 @@ const __dirname = dirname(__filename);
 import pool from './db.js';
 import coursesRouter from './routers/coursesRouter.js';
 import studentsRouter from './routers/studentsRouter.js';
+import statisticsRouter from './routers/statisticsRouter.js';
 
 const app = express();
 
@@ -123,9 +124,15 @@ app.get('/web/students/view', async (req, res) => {
     }
 });
 
+// Serve the statistics page
+app.get('/web/statistics', (req, res) => {
+    res.redirect('/api/statistics');
+});
+
 // Mount the routers to their respective paths
 app.use('/api/courses', coursesRouter);
 app.use('/api/students', studentsRouter);
+app.use('/api/statistics', statisticsRouter);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

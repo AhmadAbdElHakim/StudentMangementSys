@@ -8,6 +8,9 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     try {
         const courses = await courseDataAccess.getAllCourses();
+        for (const course of courses) {
+            course.enrolledStudents = await courseDataAccess.getEnrolledStudents(course.code);
+        }
         res.json(createResponse(true, 'Courses retrieved successfully', courses));
     } catch (err) {
         console.error('Error retrieving courses:', err);
@@ -22,6 +25,7 @@ router.get('/:code', async (req, res) => {
         if (!course) {
             return res.status(404).json(createResponse(false, 'The course with the given unique code was not found'));
         }
+        course.enrolledStudents = await courseDataAccess.getEnrolledStudents(course.code);
         res.json(createResponse(true, 'Course retrieved successfully', course));
     } catch (err) {
         console.error('Error retrieving course:', err);

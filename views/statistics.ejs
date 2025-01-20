@@ -1,0 +1,70 @@
+<h1>Statistics</h1>
+<div class="statistics-container">
+    <div class="statistic">
+        <h2>Total Number of Students: <%= totalStudents %></h2>
+    </div>
+    <div class="statistic">
+        <h2>Total Number of Courses: <%= totalCourses %></h2>
+    </div>
+    <div class="statistic">
+        <h2>Average Students per Course: <%= averageStudentsPerCourse %> </h2>
+    </div>
+</div>
+
+<div class="chart-container">
+    <h2>Students Enrolled per Course</h2>
+    <canvas id="studentsPerCourseChart" width="800" height="400"></canvas>
+</div>
+
+<!-- Add Chart.js script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('studentsPerCourseChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: <%- JSON.stringify(courseNames) %>,
+            datasets: [{
+                label: 'Number of Students',
+                data: <%- JSON.stringify(enrolledStudentsCounts) %>,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Students',
+                        font: {
+                            weight: 'bold',
+                            size: 14
+                        },
+                        color: '#4682b4'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Courses',
+                        font: {
+                            weight: 'bold',
+                            size: 14
+                        },
+                        color: '#4682b4'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });</script>
