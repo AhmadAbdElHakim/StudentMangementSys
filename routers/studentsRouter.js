@@ -1,5 +1,5 @@
 import express from 'express';
-import studentService from '../services/studentService.js';
+import studentDataAccess from '../dataAccess/studentDataAccess.js';
 import { createResponse, renderWithMessage, validateMiddleware, validateStudent, validateStudentPut } from '../utils.js';
 
 const router = express.Router();
@@ -7,9 +7,9 @@ const router = express.Router();
 // GET request to retrieve all students with their enrolled courses
 router.get('/', async (req, res) => {
     try {
-        const students = await studentService.getAllStudents();
+        const students = await studentDataAccess.getAllStudents();
         for (const student of students) {
-            student.enrolledCourses = await studentService.getEnrolledCourses(student.code);
+            student.enrolledCourses = await studentDataAccess.getEnrolledCourses(student.code);
         }
         res.json(createResponse(true, 'Students retrieved successfully', students));
     } catch (err) {
@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 // GET request to retrieve a specific student by unique code
 router.get('/:code', async (req, res) => {
     try {
-        const student = await studentService.getStudentByCode(req.params.code);
+        const student = await studentDataAccess.getStudentByCode(req.params.code);
         if (!student) {
             return res.status(404).json(createResponse(false, 'The student with the given unique code was not found'));
         }
@@ -36,7 +36,7 @@ router.get('/:code', async (req, res) => {
 router.post('/', validateMiddleware(validateStudent), async (req, res) => {
     try {
         const { name, code } = req.body;
-        const student = await studentService.addStudent(name, code);
+        const student = await studentDataAccess.addStudent(name, code);
         renderWithMessage(res, 'createStudent', { title: 'Create Student', activePage: 'createStudent' }, { type: 'success', text: 'Student added successfully' });
     } catch (err) {
         if (err.code === '23505') { // Duplicate key error code in PostgreSQL
@@ -53,7 +53,7 @@ router.post('/', validateMiddleware(validateStudent), async (req, res) => {
 router.post('/:code/enroll', async (req, res) => {
     try {
         const { course_code } = req.body;
-        const enrollment = await studentService.enrollInCourse(req.params.code, course_code);
+        const enrollment = await studentDataAccess.enrollInCourse(req.params.code, course_code);
         res.redirect('/web/students/view');
     } catch (err) {
         console.error('Error enrolling student in course:', err);
@@ -65,7 +65,7 @@ router.post('/:code/enroll', async (req, res) => {
 router.put('/', validateMiddleware(validateStudentPut), async (req, res) => {
     try {
         const { name, code } = req.body;
-        const student = await studentService.updateStudent(name, code);
+        const student = await studentDataAccess.updateStudent(name, code);
         if (!student) {
             renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' }, { type: 'error', text: 'The student with the given unique code was not found' });
         }
@@ -80,7 +80,7 @@ router.put('/', validateMiddleware(validateStudentPut), async (req, res) => {
 router.delete('/:code/unenroll', async (req, res) => {
     try {
         const { course_code } = req.body;
-        const unenrollment = await studentService.unenrollFromCourse(req.params.code, course_code);
+        const unenrollment = await studentDataAccess.unenrollFromCourse(req.params.code, course_code);
         res.redirect('/web/students/view');
     } catch (err) {
         console.error('Error unenrolling student from course:', err);
@@ -91,7 +91,7 @@ router.delete('/:code/unenroll', async (req, res) => {
 // DELETE request to remove a student by unique code
 router.delete('/:code', async (req, res) => {
     try {
-        const student = await studentService.deleteStudent(req.params.code);
+        const student = await studentDataAccess.deleteStudent(req.params.code);
         if (!student) {
             return res.status(404).json(createResponse(false, 'The student with the given unique code was not found'));
         }

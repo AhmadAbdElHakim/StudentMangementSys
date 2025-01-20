@@ -1,5 +1,5 @@
 import express from 'express';
-import courseService from '../services/courseService.js';
+import courseDataAccess from '../dataAccess/courseDataAccess.js';
 import { createResponse, renderWithMessage, validateMiddleware, validateCourse, validateCoursePut } from '../utils.js';
 
 const router = express.Router();
@@ -7,7 +7,7 @@ const router = express.Router();
 // GET request to retrieve all courses
 router.get('/', async (req, res) => {
     try {
-        const courses = await courseService.getAllCourses();
+        const courses = await courseDataAccess.getAllCourses();
         res.json(createResponse(true, 'Courses retrieved successfully', courses));
     } catch (err) {
         console.error('Error retrieving courses:', err);
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
 // GET request to retrieve a specific course by unique code
 router.get('/:code', async (req, res) => {
     try {
-        const course = await courseService.getCourseByCode(req.params.code);
+        const course = await courseDataAccess.getCourseByCode(req.params.code);
         if (!course) {
             return res.status(404).json(createResponse(false, 'The course with the given unique code was not found'));
         }
@@ -33,7 +33,7 @@ router.get('/:code', async (req, res) => {
 router.post('/', validateMiddleware(validateCourse), async (req, res) => {
     try {
         const { name, code, description } = req.body;
-        const course = await courseService.addCourse(name, code, description);
+        const course = await courseDataAccess.addCourse(name, code, description);
         renderWithMessage(res, 'createCourse', { title: 'Create Course', activePage: 'createCourse' }, { type: 'success', text: 'Course added successfully' });
     } catch (err) {
         if (err.code === '23505') { // Duplicate key error code in PostgreSQL
@@ -50,7 +50,7 @@ router.post('/', validateMiddleware(validateCourse), async (req, res) => {
 router.put('/', validateMiddleware(validateCoursePut), async (req, res) => {
     try {
         const { name, code, description } = req.body;
-        const course = await courseService.updateCourse(name, code, description);
+        const course = await courseDataAccess.updateCourse(name, code, description);
         if (!course) {
             renderWithMessage(res, 'updateCourse', { title: 'Update Course', activePage: 'updateCourse' }, { type: 'error', text: 'The course with the given unique code was not found' });
         }
@@ -64,7 +64,7 @@ router.put('/', validateMiddleware(validateCoursePut), async (req, res) => {
 // DELETE request to remove a course by unique code
 router.delete('/:code', async (req, res) => {
     try {
-        const course = await courseService.deleteCourse(req.params.code);
+        const course = await courseDataAccess.deleteCourse(req.params.code);
         if (!course) {
             return res.status(404).json(createResponse(false, 'The course with the given unique code was not found'));
         }

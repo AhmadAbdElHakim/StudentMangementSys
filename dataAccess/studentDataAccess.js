@@ -1,6 +1,6 @@
 import pool from '../db.js';
 
-const studentService = {
+const studentDataAccess = {
     getAllStudents: async () => {
         const { rows } = await pool.query('SELECT * FROM students');
         return rows;
@@ -57,4 +57,4 @@ const studentService = {
     }
 };
 
-export default studentService;
+export default studentDataAccess;
