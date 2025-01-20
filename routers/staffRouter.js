@@ -47,14 +47,13 @@ router.put('/', validateMiddleware(validateStaffPut), async (req, res) => {
     try {
         const { name, code, title, course_code } = req.body;
         const staff = await staffDataAccess.updateStaff(name, code, title);
+        if (!staff) {
+            return renderWithMessage(res, 'updateStaff', { title: 'Update Staff', activePage: 'updateStaff' }, { type: 'error', text: 'The staff member with the given unique code was not found' });
+        }
         if (course_code) {
             await courseDataAccess.assignStaffToCourse(course_code, code);
         }
-        if (!staff) {
-            renderWithMessage(res, 'updateStaff', { title: 'Update Staff', activePage: 'updateStaff' }, { type: 'error', text: 'The staff member with the given unique code was not found' });
-        } else {
-            renderWithMessage(res, 'updateStaff', { title: 'Update Staff', activePage: 'updateStaff' }, { type: 'success', text: 'Staff member updated successfully' });
-        }
+        renderWithMessage(res, 'updateStaff', { title: 'Update Staff', activePage: 'updateStaff' }, { type: 'success', text: 'Staff member updated successfully' });
     } catch (err) {
         console.error('Error updating staff member:', err);
         renderWithMessage(res, 'updateStaff', { title: 'Update Staff', activePage: 'updateStaff' }, { type: 'error', text: 'An error occurred while updating the staff member' });

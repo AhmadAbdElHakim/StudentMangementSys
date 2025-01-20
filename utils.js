@@ -8,15 +8,18 @@ export const renderWithMessage = (res, view, options, message = null) => {
     res.render('layout', {
         ...options,
         content: view,
-        message
+        message,
+        messageClass: message && message.type === 'error' ? 'error-box' : ''
     });
 };
 
 // Generic validation middleware
-export const validateMiddleware = (validator) => {
+export const validateMiddleware = (validator, viewName, entityName) => {
     return (req, res, next) => {
         const { error } = validator(req.body);
-        if (error) return res.status(400).json(createResponse(false, error.details[0].message));
+        if (error) {
+            return renderWithMessage(res, viewName, { title: `Create ${entityName}`, activePage: `create${entityName}` }, { type: 'error', text: error.details[0].message });
+        }
         next();
     };
 };
@@ -36,7 +39,7 @@ export const validateCourse = (course) => {
 // Function to validate student data for POST requests
 export const validateStudent = (student) => {
     const schema = Joi.object({
-        name: Joi.string().pattern(/^[A-Za-z-']+$/).required(),
+        name: Joi.string().pattern(/^[A-Za-z\s-'.-]+$/).required(),
         code: Joi.string().length(7).required()
     });
     return schema.validate(student);
@@ -45,9 +48,9 @@ export const validateStudent = (student) => {
 // Function to validate staff data for POST requests
 export const validateStaff = (staff) => {
     const schema = Joi.object({
-        name: Joi.string().min(5).required(),
-        code: Joi.string().length(7).required(),
-        title: Joi.string().min(3).required(),
+        name: Joi.string().min(5).pattern(/^[A-Za-z\s-'.-]+$/).required(),
+        code: Joi.string().length(6).required(),
+        title: Joi.string().optional().allow(''),
         course_code: Joi.string().length(6).optional().allow('')
     });
     return schema.validate(staff);
@@ -66,7 +69,7 @@ export const validateCoursePut = (course) => {
 // Function to validate student data for PUT requests
 export const validateStudentPut = (student) => {
     const schema = Joi.object({
-        name: Joi.string().pattern(/^[A-Za-z-']+$/).optional().allow(''),
+        name: Joi.string().pattern(/^[A-Za-z\s-'.-]+$/).optional().allow(''),
         code: Joi.string().length(7).optional().allow('')
     });
     return schema.validate(student);
@@ -75,9 +78,9 @@ export const validateStudentPut = (student) => {
 // Function to validate staff data for PUT requests
 export const validateStaffPut = (staff) => {
     const schema = Joi.object({
-        name: Joi.string().min(5).optional().allow(''),
-        code: Joi.string().length(7).optional().allow(''),
-        title: Joi.string().min(3).optional().allow(''),
+        name: Joi.string().min(5).pattern(/^[A-Za-z\s-'.-]+$/).optional().allow(''),
+        code: Joi.string().length(6).optional().allow(''),
+        title: Joi.string().optional().allow(''),
         course_code: Joi.string().length(6).optional().allow('')
     });
     return schema.validate(staff);
@@ -129,7 +132,7 @@ export const handlePut = (dataAccessMethod, entityName, viewName) => async (req,
     try {
         const entity = await dataAccessMethod(req.body);
         if (!entity) {
-            renderWithMessage(res, viewName, { title: `Update ${entityName}`, activePage: `update${entityName}` }, { type: 'error', text: `The ${entityName.toLowerCase()} with the given unique code was not found` });
+            return renderWithMessage(res, viewName, { title: `Update ${entityName}`, activePage: `update${entityName}` }, { type: 'error', text: `The ${entityName.toLowerCase()} with the given unique code was not found` });
         }
         renderWithMessage(res, viewName, { title: `Update ${entityName}`, activePage: `update${entityName}` }, { type: 'success', text: `${entityName} updated successfully` });
     } catch (err) {

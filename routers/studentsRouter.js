@@ -33,7 +33,7 @@ router.get('/:code', async (req, res) => {
 });
 
 // POST request to add a new student
-router.post('/', validateMiddleware(validateStudent), async (req, res) => {
+router.post('/', validateMiddleware(validateStudent, 'createStudent', 'Student'), async (req, res) => {
     try {
         const { name, code } = req.body;
         const student = await studentDataAccess.addStudent(name, code);
@@ -53,7 +53,7 @@ router.post('/', validateMiddleware(validateStudent), async (req, res) => {
 router.post('/:code/enroll', async (req, res) => {
     try {
         const { course_code } = req.body;
-        const enrollment = await studentDataAccess.enrollInCourse(req.params.code, course_code);
+        await studentDataAccess.enrollInCourse(req.params.code, course_code);
         res.redirect('/web/students/view');
     } catch (err) {
         console.error('Error enrolling student in course:', err);
@@ -62,12 +62,12 @@ router.post('/:code/enroll', async (req, res) => {
 });
 
 // PUT request to update an existing student
-router.put('/', validateMiddleware(validateStudentPut), async (req, res) => {
+router.put('/', validateMiddleware(validateStudentPut, 'updateStudent', 'Student'), async (req, res) => {
     try {
         const { name, code } = req.body;
         const student = await studentDataAccess.updateStudent(name, code);
         if (!student) {
-            renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' }, { type: 'error', text: 'The student with the given unique code was not found' });
+            return renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' }, { type: 'error', text: 'The student with the given unique code was not found' });
         }
         renderWithMessage(res, 'updateStudent', { title: 'Update Student', activePage: 'updateStudent' }, { type: 'success', text: 'Student updated successfully' });
     } catch (err) {
@@ -80,7 +80,7 @@ router.put('/', validateMiddleware(validateStudentPut), async (req, res) => {
 router.delete('/:code/unenroll', async (req, res) => {
     try {
         const { course_code } = req.body;
-        const unenrollment = await studentDataAccess.unenrollFromCourse(req.params.code, course_code);
+        await studentDataAccess.unenrollFromCourse(req.params.code, course_code);
         res.redirect('/web/students/view');
     } catch (err) {
         console.error('Error unenrolling student from course:', err);

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS courses (
     name VARCHAR(255) NOT NULL,
     code VARCHAR(6) NOT NULL UNIQUE PRIMARY KEY,
     description TEXT,
-    staff_code VARCHAR(7) NOT NULL,
+    staff_code VARCHAR(6) NOT NULL,
     FOREIGN KEY (staff_code) REFERENCES staff(code) ON DELETE SET NULL
 );
 
