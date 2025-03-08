@@ -1,5 +1,21 @@
 # Learning Management System
 
+## Features
+
+### Views
+- **Home Page** <br/> <br/> <img width="1277" alt="Image" src="https://github.com/user-attachments/assets/5d353d6b-506b-4dd1-977e-01714edc9f92" />
+- **Statistics** <br/> <br/> <img width="1267" alt="Image" src="https://github.com/user-attachments/assets/4b00ec97-2f55-40b8-bba0-fe10d723acfe" />
+- **View Staff** <br/> <br/> <img width="1264" alt="Image" src="https://github.com/user-attachments/assets/ebd8df36-9d4d-4904-bf4e-d812f3bfe690" />
+- **View Courses** <br/> <br/> <img width="1266" alt="Image" src="https://github.com/user-attachments/assets/ba083de7-e224-429f-b0d1-6f9002e0bc75" />
+- **View Students** <br/> <br/> <img width="1265" alt="Image" src="https://github.com/user-attachments/assets/c8fa07af-3a9d-402c-8dfc-1e98edc25c34" />
+
+### Creation and Update
+- **Create Course** <br/> <br/> <img width="1265" alt="Image" src="https://github.com/user-attachments/assets/82975c1a-18cf-4cec-a2c6-58512eec4b2b" />
+- **Update Staff** <br/> <br/> <img width="1267" alt="Image" src="https://github.com/user-attachments/assets/6330d1e1-85d8-4003-a659-e170c0621909" />
+
+## Schema
+![Image](https://github.com/user-attachments/assets/bfb0b87b-c501-4138-8352-0bf0abb9cf69)
+
 ## Prerequisites
 - Node.js
 - npm (Node Package Manager)
